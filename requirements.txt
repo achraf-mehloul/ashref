@@ -1,0 +1,4 @@
+Flask==2.3.3
+Werkzeug==2.3.7
+paypalrestsdk==1.13.3
+stripe==8.4.0
