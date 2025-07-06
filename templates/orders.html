@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الطلبات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --secondary: #8E85FF;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #fd7e14;
+            --info: #17a2b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: var(--dark);
+            font-size: 1.8rem;
+        }
+        
+        .back-btn {
+            background: var(--gray);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .back-btn i {
+            margin-right: 8px;
+        }
+        
+        .back-btn:hover {
+            background: var(--dark);
+            transform: translateY(-2px);
+        }
+        
+        .orders-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.05);
+        }
+        
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .orders-table th,
+        .orders-table td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .orders-table th {
+            background: rgba(108, 99, 255, 0.05);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .orders-table tr:hover {
+            background: rgba(108, 99, 255, 0.03);
+        }
+        
+        .status-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .status-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        
+        .status-processing {
+            background: #74b9ff;
+            color: #0984e3;
+        }
+        
+        .status-shipped {
+            background: #fd79a8;
+            color: #e84393;
+        }
+        
+        .status-delivered {
+            background: #00b894;
+            color: white;
+        }
+        
+        .status-cancelled {
+            background: #fd79a8;
+            color: #e84393;
+        }
+        
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .action-btn i {
+            margin-right: 5px;
+        }
+        
+        .whatsapp-btn {
+            background: #25D366;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash-message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .orders-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            
+            .orders-table th,
+            .orders-table td {
+                padding: 10px 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>إدارة الطلبات</h1>
+            <a href="{{ url_for('admin_dashboard') }}" class="back-btn">
+                <i class="fas fa-arrow-right"></i>
+                العودة للوحة التحكم
+            </a>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <div class="orders-section">
+            {% if orders %}
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td>{{ order.phone }}</td>
+                        <td>{{ order.address }}, {{ order.wilaya }}</td>
+                        <td>
+                            {% for item in order.order_items %}
+                            {{ item.name }} ({{ item.quantity }})<br>
+                            {% endfor %}
+                        </td>
+                        <td>{{ order.total }} DZD</td>
+                        <td>
+                            <select class="status-select order-status" data-order-id="{{ order.id }}">
+                                <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                                <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </td>
+                        <td>{{ order.date }}</td>
+                        <td>
+                            <a href="https://wa.me/{{ order.phone }}" target="_blank" class="action-btn whatsapp-btn">
+                                <i class="fab fa-whatsapp"></i>
+                                WhatsApp
+                            </a>
+                            <button class="action-btn delete-btn delete-order-btn" data-order-id="{{ order.id }}">
+                                <i class="fas fa-trash"></i>
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center;">No orders found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3>لا توجد طلبات</h3>
+                    <p>لم يتم تقديم أي طلبات بعد</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        document.querySelectorAll('.order-status').forEach(select => {
+            select.addEventListener('change', function() {
+                const orderId = this.getAttribute('data-order-id');
+                const status = this.value;
+                
+                fetch(`/admin/update_order_status/${orderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `status=${status}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const message = document.createElement('div');
+                        message.className = 'flash-message flash-success';
+                        message.textContent = 'تم تحديث حالة الطلب بنجاح';
+                        document.querySelector('.container').insertBefore(message, document.querySelector('.orders-section'));
+                        
+                        setTimeout(() => {
+                            message.remove();
+                        }, 3000);
+                    } else {
+                        alert('حدث خطأ في تحديث حالة الطلب: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('حدث خطأ في الاتصال: ' + error.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
