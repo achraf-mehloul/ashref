@@ -782,23 +782,25 @@ if __name__ == '__main__':
         }
         data['products'].append(sample_product)
         save_data('products', data['products'])
-            # إنشاء ملفات JSON إذا لم تكن موجودة
-    if not os.path.exists(ORDERS_FILE):
-        with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
-            json.dump([], f)
+    # إنشاء ملفات JSON إذا لم تكن موجودة
+if not os.path.exists(ORDERS_FILE):
+    with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump([], f)
 
-    if not os.path.exists(PRODUCTS_FILE):
-        with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
-            json.dump([], f)
+if not os.path.exists(PRODUCTS_FILE):
+    with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
+        json.dump([], f)
 
-    if not os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'w', encoding='utf-8') as f:
-            json.dump({
-                'admin': {
-                    'password': 'admin123',
-                    'name': 'Admin',
-                    'role': 'admin'
-                }
-            }, f)
-    
-    app.run(debug=True)
+if not os.path.exists(USERS_FILE):
+    with open(USERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump({
+            'admin': {
+                'password': 'admin123',
+                'name': 'Admin',
+                'role': 'admin'
+            }
+        }, f)
+
+# شغل التطبيق على كل الواجهات، مع دعم Render
+port = int(os.environ.get('PORT', 10000))
+app.run(host='0.0.0.0', port=port, debug=True)
