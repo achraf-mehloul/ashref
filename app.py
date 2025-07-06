@@ -9,7 +9,7 @@ import paypalrestsdk
 import stripe
 
 app = Flask(__name__)
-app.secret_key = 'your_very_secret_key_here'
+app.secret_key = '6327077b4334f16473a169e8d49acfff213b7ee31aabcd0b519b50e408fb6ee6'  # يجب أن يكون هذا مفتاحًا سريًا قويًا وفريدًا
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 
@@ -18,7 +18,7 @@ app.config['PAYPAL_MODE'] = 'sandbox'  # or 'live'
 app.config['PAYPAL_CLIENT_ID'] = 'your_paypal_client_id'
 app.config['PAYPAL_CLIENT_SECRET'] = 'your_paypal_secret'
 app.config['STRIPE_PUBLIC_KEY'] = 'your_stripe_public_key'
-app.config['STRIPE_SECRET_KEY'] = 'your_stripe_secret_key'
+app.config['STRIPE_SECRET_KEY'] = 'your_stripe_secret_key'  # يجب أن تبدأ بـ 'sk_test_' أو 'sk_live_'
 
 # Configure PayPal
 paypalrestsdk.configure({
@@ -30,6 +30,7 @@ paypalrestsdk.configure({
 # Configure Stripe
 stripe.api_key = app.config['STRIPE_SECRET_KEY']
 
+# Create upload folder if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 PRODUCTS_FILE = 'products.json'
