@@ -1,16 +1,16 @@
-# Ashref Online Store 🚀
+# 🛍️ Ashref Online Store 🚀
 
-[https://ashref.onrender.com](https://ashref.onrender.com)
+🌐 [https://ashref.onrender.com](https://ashref.onrender.com)
 
 ---
 
 ## 🌟 A Fresh & Youthful Shopping Experience
 
-Ashref Online Store is a modern e-commerce platform designed with a clean, stylish, and user-friendly interface. Perfect for young and trendy shoppers who want a seamless online shopping experience.
+**Ashref Online Store** is a modern e-commerce platform designed with a clean, stylish, and user-friendly interface. Perfect for young and trendy shoppers who want a seamless online shopping experience.
 
 ---
 
-## Features
+## ✅ Features
 
 - **Modern & Sleek Interface**  
   Intuitive layout with sharp visuals and elegant design.
@@ -41,7 +41,7 @@ Ashref Online Store is a modern e-commerce platform designed with a clean, styli
 
 ---
 
-## Potential Features to Add
+## 🚀 Potential Features to Add
 
 - Customer Reviews & Testimonials  
 - Best Sellers or Trending Products sections  
@@ -50,16 +50,43 @@ Ashref Online Store is a modern e-commerce platform designed with a clean, styli
 
 ---
 
-## Get Started
+## 📁 Project Structure
 
-Visit the store and explore: [https://ashref.onrender.com](https://ashref.onrender.com)
+```
+Ashref-Online-Store/
+├── app.py
+├── orders.json
+├── payments.json
+├── products.json
+├── settings.json
+├── users.json
+├── requirements.txt
+├── project/
+├── project-bolt-sb1-u5ynrkvy.zip
+├── myenv/
+├── static/
+│   ├── images/
+│   │   └── A.png
+│   ├── videos/
+│   │   ├── hero.mp4
+│   │   └── footer.mp4
+│   └── uploads/
+├── templates/
+│   ├── admin/
+│   │   ├── dashboard.html
+│   │   └── login.html
+│   ├── add_product.html
+│   ├── edit_product.html
+│   ├── index.html
+│   ├── orders.html
+│   ├── payment_cancelled.html
+│   ├── payment_failed.html
+│   ├── payment_succes.html
+│   ├── products.html
+│   ├── setting.html
+│   └── view_orders.html
+```
 
 ---
 
-## Contact
-
-Feel free to reach out for feedback or collaboration!
-
----
-
-*Thank you for checking out Ashref Online Store!*
+*Thank you for checking out Ashref Online Store! 🙌*
