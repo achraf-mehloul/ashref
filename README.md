@@ -50,6 +50,32 @@
 
 ---
 
+## 🧪 Tech Stack
+
+- **Frontend**: HTML, CSS, JavaScript  
+- **Backend**: Python (Flask)  
+- **Database**: JSON-based storage (products, orders, users, settings)
+
+---
+
+## ⚙️ How to Run Locally
+
+```bash
+# 1. Create virtual environment
+python3 -m venv myenv
+source myenv/bin/activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Run the application
+python app.py
+# or
+py app.py
+```
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -114,6 +140,28 @@ Ashref-Online-Store/
 
 ### 📦 Product View in Admin Dashboard
 ![Product in Dashboard](static/images/10.png)
+
+---
+
+### 🔐 Demo Credentials
+
+You can log in to the admin dashboard using:  
+**Username:** `admin`  
+**Password:** `admin123`
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!  
+If you'd like to improve the project, feel free to fork the repo, make changes, and submit a pull request.
+
+---
+
+## ⚖️ License
+
+This project is licensed under the MIT License.  
+You're free to use, modify, and distribute it with proper credit.
 
 ---
 
