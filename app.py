@@ -9,28 +9,24 @@ import paypalrestsdk
 import stripe
 
 app = Flask(__name__)
-app.secret_key = '6327077b4334f16473a169e8d49acfff213b7ee31aabcd0b519b50e408fb6ee6'  # يجب أن يكون هذا مفتاحًا سريًا قويًا وفريدًا
+app.secret_key = '6327077b4334f16473a169e8d49acfff213b7ee31aabcd0b519b50e408fb6ee6'  
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 
-# Payment configurations
-app.config['PAYPAL_MODE'] = 'sandbox'  # or 'live'
+app.config['PAYPAL_MODE'] = 'sandbox'  
 app.config['PAYPAL_CLIENT_ID'] = 'your_paypal_client_id'
 app.config['PAYPAL_CLIENT_SECRET'] = 'your_paypal_secret'
 app.config['STRIPE_PUBLIC_KEY'] = 'your_stripe_public_key'
-app.config['STRIPE_SECRET_KEY'] = 'your_stripe_secret_key'  # يجب أن تبدأ بـ 'sk_test_' أو 'sk_live_'
+app.config['STRIPE_SECRET_KEY'] = 'your_stripe_secret_key'  
 
-# Configure PayPal
 paypalrestsdk.configure({
     "mode": app.config['PAYPAL_MODE'],
     "client_id": app.config['PAYPAL_CLIENT_ID'],
     "client_secret": app.config['PAYPAL_CLIENT_SECRET']
 })
 
-# Configure Stripe
 stripe.api_key = app.config['STRIPE_SECRET_KEY']
 
-# Create upload folder if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 PRODUCTS_FILE = 'products.json'
@@ -52,12 +48,21 @@ def load_data():
             'welcome_message': 'Welcome to our e-shop',
             'whatsapp_number': '213782675199',
             'logo': 'images/logo.png',
-            'background_video': 'videos/bg.mp4'
+            'background_video': 'videos/bg.mp4',
+            'products_per_page': 8  # إعداد جديد لعدد المنتجات لكل صفحة
         },
         'payments': []
     }
     
     try:
+        if not os.path.exists(PRODUCTS_FILE):
+            with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
+                json.dump([], f)
+        
+        if not os.path.exists(ORDERS_FILE):
+            with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
+                json.dump([], f)
+                
         if os.path.exists(PRODUCTS_FILE):
             with open(PRODUCTS_FILE, 'r', encoding='utf-8') as f:
                 data['products'] = json.load(f)
@@ -65,7 +70,6 @@ def load_data():
         if os.path.exists(ORDERS_FILE):
             with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
                 data['orders'] = json.load(f)
-                # تحويل معرفات الطلبات إلى أرقام
                 for order in data['orders']:
                     order['id'] = int(order['id']) if isinstance(order['id'], str) else order['id']
         
@@ -85,26 +89,32 @@ def load_data():
         print(f"Error loading data: {e}")
     
     return data
-
 def save_data(data_type, data):
     try:
-        if data_type == 'products':
-            with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        elif data_type == 'orders':
-            with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        elif data_type == 'settings':
-            with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        elif data_type == 'users':
-            with open(USERS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        elif data_type == 'payments':
-            with open(PAYMENTS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+        filename = {
+            'products': PRODUCTS_FILE,
+            'orders': ORDERS_FILE,
+            'settings': SETTINGS_FILE,
+            'users': USERS_FILE,
+            'payments': PAYMENTS_FILE
+        }.get(data_type)
+        
+        if not filename:
+            raise ValueError(f"Unknown data type: {data_type}")
+
+        if not os.path.exists(filename):
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump([] if data_type in ['products', 'orders', 'payments'] else {}, f)
+
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        
+        print(f"Data saved successfully to {filename}")
+        return True
     except Exception as e:
         print(f"Error saving {data_type}: {e}")
+        return False
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -155,12 +165,45 @@ def get_chart_data():
 def validate_phone(phone):
     pattern = r'^(\+213|0)(5|6|7)[0-9]{8}$'
     return re.match(pattern, phone) is not None
+    
+def get_active_products():
+    data = load_data()
+    return [p for p in data['products'] if p.get('is_active', True)]
 
+@app.route('/api/products')
+def api_products():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 8, type=int)
+    
+    active_products = get_active_products()
+    total_products = len(active_products)
+    start = (page - 1) * per_page
+    end = start + per_page
+    
+    paginated_products = active_products[start:end]
+    
+    return jsonify({
+        'products': paginated_products,
+        'total': total_products,
+        'page': page,
+        'per_page': per_page,
+        'total_pages': (total_products + per_page - 1) // per_page
+    })
 @app.route('/')
 def home():
     data = load_data()
+    
+    for product in data['products']:
+        if 'date_added' not in product:
+            product['date_added'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            save_data('products', data['products'])
+    
+    latest_products = sorted(data['products'], 
+                           key=lambda x: x.get('date_added', ''), 
+                           reverse=True)[:8]
+    
     return render_template('index.html', 
-                         products=data['products'],
+                         products=latest_products,
                          settings=data['settings'],
                          paypal_client_id=app.config['PAYPAL_CLIENT_ID'],
                          stripe_public_key=app.config['STRIPE_PUBLIC_KEY'],
@@ -184,7 +227,6 @@ def place_order():
     if request.method == 'POST':
         try:
             data = load_data()
-            products = data['products']
             orders = data['orders']
             
             order_data = request.get_json()
@@ -216,21 +258,23 @@ def place_order():
             order_items = []
             total = 0
             for item in order_data['products']:
-                product = next((p for p in products if str(p['id']) == str(item['id'])), None)
+                product = next((p for p in data['products'] if str(p['id']) == str(item['id'])), None)
                 if product:
                     order_items.append({
                         'id': product['id'],
                         'name': product['name'],
                         'price': product['price'],
-                        'quantity': item['quantity']
+                        'quantity': item['quantity'],
+                        'image': product.get('image', '')
                     })
                     total += product['price'] * item['quantity']
             
             if not order_items:
                 return jsonify({'success': False, 'message': 'No valid products found'})
+            new_id = max([order['id'] for order in orders], default=0) + 1
             
-                new_order = {
-                'id': len(orders) + 1,
+            new_order = {
+                'id': new_id,
                 'customer_name': f"{order_data['firstName']} {order_data['lastName']}",
                 'email': order_data['email'],
                 'wilaya': order_data['wilaya'],
@@ -245,13 +289,22 @@ def place_order():
             }
             
             orders.append(new_order)
-            save_data('orders', orders)
             
-            return jsonify({
-                'success': True,
-                'message': 'Your order has been received! We will contact you soon.',
-                'order_id': new_order['id']
-            })
+            try:
+                data['orders'] = orders  
+                save_data('orders', orders)
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Your order has been received! We will contact you soon.',
+                    'order_id': new_order['id']
+                })
+            except Exception as e:
+                print(f"Error saving order: {str(e)}")
+                return jsonify({
+                    'success': False,
+                    'message': 'Failed to save your order. Please try again.'
+                })
             
         except Exception as e:
             print(f"Error processing order: {str(e)}")
@@ -259,7 +312,6 @@ def place_order():
                 'success': False,
                 'message': f'Error processing order: {str(e)}'
             })
-
 @app.route('/create_paypal_payment', methods=['POST'])
 def create_paypal_payment():
     try:
@@ -301,7 +353,6 @@ def execute_paypal_payment():
         payment = paypalrestsdk.Payment.find(payment_id)
         
         if payment.execute({"payer_id": payer_id}):
-            # Save payment details
             payment_data = {
                 'payment_id': payment_id,
                 'payer_id': payer_id,
@@ -328,7 +379,7 @@ def execute_paypal_payment():
 def create_stripe_payment():
     try:
         data = request.get_json()
-        amount = int(float(data['amount']) * 100)  # Convert to cents
+        amount = int(float(data['amount']) * 100)  
         currency = data.get('currency', 'usd')
         token = data['token']
         
@@ -339,7 +390,6 @@ def create_stripe_payment():
             description="Payment for order"
         )
         
-        # Save payment details
         payment_data = {
             'payment_id': charge.id,
             'amount': charge.amount / 100,
@@ -370,9 +420,6 @@ def process_ccp_payment():
         if not reference:
             return jsonify({'success': False, 'message': 'Reference number is required'})
         
-        # In a real app, you would verify the payment with CCP API here
-        # For demo purposes, we'll simulate a successful payment
-        
         payment_data = {
             'payment_id': f"ccp_{datetime.now().strftime('%Y%m%d%H%M%S')}",
             'amount': amount,
@@ -402,8 +449,6 @@ def process_baridimob_payment():
         if not phone or not validate_phone(phone):
             return jsonify({'success': False, 'message': 'Valid phone number is required'})
         
-        # In a real app, you would initiate Baridi Mob payment here
-        # For demo purposes, we'll simulate a successful payment
         
         payment_data = {
             'payment_id': f"baridimob_{datetime.now().strftime('%Y%m%d%H%M%S')}",
@@ -458,11 +503,17 @@ def admin_login():
 def admin_dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('admin_login'))
+
     
     data = load_data()
+    print(f"Debug - Orders loaded: {data['orders']}")
+
+    data = load_data()
     chart_data = get_chart_data()
+
+    data = load_data()
+    print(f"Loaded orders: {data['orders']}")
     
-    # حساب الإحصائيات
     total_sales = sum(order.get('total', 0) for order in data['orders'])
     total_orders = len(data['orders'])
     total_products = len(data['products'])
@@ -587,8 +638,10 @@ def add_product():
                 'features': features,
                 'image': image_path if image_path else 'images/default-product.jpg',
                 'video': video_path if video_path else '',
-                'background_image': bg_image_path if bg_image_path else ''
-            }
+                'background_image': bg_image_path if bg_image_path else '',
+                'date_added': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  
+                'is_active': True  
+}
             
             products.append(new_product)
             save_data('products', products)
@@ -726,7 +779,6 @@ def admin_settings():
             return redirect(url_for('admin_settings'))
     
     return render_template('admin/settings.html', settings=data['settings'])
-
 @app.route('/admin/logout')
 def admin_logout():
     session.clear()
@@ -734,42 +786,6 @@ def admin_logout():
 
 if __name__ == '__main__':
     if not os.path.exists(PRODUCTS_FILE):
-        with open(PRODUCTS_FILE, 'w') as f:
-            json.dump([], f)
-    
-    if not os.path.exists(ORDERS_FILE):
-        with open(ORDERS_FILE, 'w') as f:
-            json.dump([], f)
-    
-    if not os.path.exists(SETTINGS_FILE):
-        with open(SETTINGS_FILE, 'w') as f:
-            json.dump({
-                'site_title': 'My E-Shop',
-                'site_description': 'Best online shopping experience',
-                'welcome_title': 'Welcome to our store',
-                'welcome_subtitle': 'Best products at best prices',
-                'welcome_message': 'Welcome to our e-shop',
-                'whatsapp_number': '213782675199',
-                'logo': 'images/logo.png',
-                'background_video': 'videos/bg.mp4'
-            }, f)
-    
-    if not os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'w') as f:
-            json.dump({
-                'admin': {
-                    'password': 'admin123',
-                    'name': 'Admin',
-                    'role': 'admin'
-                }
-            }, f)
-    
-    if not os.path.exists(PAYMENTS_FILE):
-        with open(PAYMENTS_FILE, 'w') as f:
-            json.dump([], f)
-    
-    data = load_data()
-    if not data['products']:
         sample_product = {
             'id': '1',
             'name': 'Sample Product',
@@ -778,29 +794,46 @@ if __name__ == '__main__':
             'features': 'Feature 1, Feature 2',
             'image': 'images/default-product.jpg',
             'video': '',
-            'background_image': ''
+            'background_image': '',
+            'date_added': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'is_active': True
         }
-        data['products'].append(sample_product)
-        save_data('products', data['products'])
-    # إنشاء ملفات JSON إذا لم تكن موجودة
-if not os.path.exists(ORDERS_FILE):
-    with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
-        json.dump([], f)
+        with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump([sample_product], f, ensure_ascii=False, indent=2)
 
-if not os.path.exists(PRODUCTS_FILE):
-    with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
-        json.dump([], f)
+    if not os.path.exists(ORDERS_FILE):
+        with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
+            json.dump([], f)
 
-if not os.path.exists(USERS_FILE):
-    with open(USERS_FILE, 'w', encoding='utf-8') as f:
-        json.dump({
-            'admin': {
-                'password': 'admin123',
-                'name': 'Admin',
-                'role': 'admin'
-            }
-        }, f)
+    if not os.path.exists(SETTINGS_FILE):
+        with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump({
+                'site_title': 'My E-Shop',
+                'site_description': 'Best online shopping experience',
+                'welcome_title': 'Welcome to our store',
+                'welcome_subtitle': 'Best products at best prices',
+                'welcome_message': 'Welcome to our e-shop',
+                'whatsapp_number': '213782675199',
+                'logo': 'images/logo.png',
+                'background_video': 'videos/bg.mp4',
+                'products_per_page': 8
+            }, f, ensure_ascii=False, indent=2)
 
-# شغل التطبيق على كل الواجهات، مع دعم Render
-port = int(os.environ.get('PORT', 10000))
-app.run(host='0.0.0.0', port=port, debug=True)
+    if not os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'w', encoding='utf-8') as f:
+            json.dump({
+                'admin': {
+                    'password': 'admin123',
+                    'name': 'Admin User',
+                    'role': 'admin',
+                    'email': 'admin@example.com',
+                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+            }, f, ensure_ascii=False, indent=2)
+
+    if not os.path.exists(PAYMENTS_FILE):
+        with open(PAYMENTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump([], f)
+
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, debug=True)
