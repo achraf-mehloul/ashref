@@ -786,20 +786,8 @@ def admin_logout():
 
 if __name__ == '__main__':
     if not os.path.exists(PRODUCTS_FILE):
-        sample_product = {
-            'id': '1',
-            'name': 'Sample Product',
-            'price': 100.00,
-            'description': 'Sample product description',
-            'features': 'Feature 1, Feature 2',
-            'image': 'images/default-product.jpg',
-            'video': '',
-            'background_image': '',
-            'date_added': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'is_active': True
-        }
         with open(PRODUCTS_FILE, 'w', encoding='utf-8') as f:
-            json.dump([sample_product], f, ensure_ascii=False, indent=2)
+            json.dump([], f, ensure_ascii=False, indent=2)
 
     if not os.path.exists(ORDERS_FILE):
         with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
@@ -818,6 +806,7 @@ if __name__ == '__main__':
                 'background_video': 'videos/bg.mp4',
                 'products_per_page': 8
             }, f, ensure_ascii=False, indent=2)
+
 
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, 'w', encoding='utf-8') as f:
